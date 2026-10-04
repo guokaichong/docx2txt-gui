@@ -2,12 +2,12 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "DocX优雅阅读器",
   "version": "1.0.0",
-  "identifier": "com.docx-reader.app",
+  "identifier": "com.docxreader.desktop",
   "build": {
     "beforeBuildCommand": "",
     "beforeDevCommand": "",
     "devUrl": "http://localhost:5173",
-    "frontendDist": ".."
+    "frontendDist": "../dist"
   },
   "app": {
     "withGlobalTauri": true,
