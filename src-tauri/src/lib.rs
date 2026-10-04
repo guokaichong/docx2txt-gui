@@ -49,7 +49,10 @@ fn parse_docx_raw(path: &str) -> Result<Vec<String>, String> {
                 let mut buf = Vec::new();
                 loop {
                     match reader.read_event_into(&mut buf) {
-                        Ok(Event::Text(ref e)) | Ok(Event::CData(ref e)) => {
+                        Ok(Event::Text(ref e)) => {
+                            current_para.push(e.unescape().unwrap_or_default().to_string());
+                        }
+                        Ok(Event::CData(ref e)) => {
                             current_para.push(e.unescape().unwrap_or_default().to_string());
                         }
                         _ => break,
