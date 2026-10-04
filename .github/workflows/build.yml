@@ -22,6 +22,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -33,22 +38,18 @@ jobs:
         with:
           workspaces: src-tauri -> target
 
-      - name: Install Dependencies
-        run: |
-          rustup target add x86_64-pc-windows-msvc
-          cargo install tauri-cli --locked || true
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --locked --version "^2.0"
 
       - name: Build Tauri
-        run: |
-          cargo tauri build --target x86_64-pc-windows-msvc --verbose 2>&1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: cargo tauri build --target x86_64-pc-windows-msvc --verbose 2>&1
 
-      - name: Upload Artifact
+      - name: Upload MSI
         uses: actions/upload-artifact@v4
         with:
           name: docx-reader-win64
           path: src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi
+          if-no-files-found: error
           retention-days: 30
 
       - name: Upload EXE
@@ -56,33 +57,44 @@ jobs:
         with:
           name: docx-reader-exe
           path: src-tauri/target/x86_64-pc-windows-msvc/release/docx_reader.exe
+          if-no-files-found: warn
           retention-days: 30
 
   # ── macOS x64 ──────────────────────────────────────────
   build-macos:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+          targets: x86_64-apple-darwin
 
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri -> target
 
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --locked --version "^2.0"
+
       - name: Build Tauri (x64)
         run: cargo tauri build --target x86_64-apple-darwin --verbose 2>&1
 
-      - name: Upload Artifact
+      - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
           name: docx-reader-macos-x64
-          path: src-tauri/target/x86_64-apple-darwin/release/bundle/macos/*.dmg
+          path: src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: warn
           retention-days: 30
 
   # ── macOS ARM64 ────────────────────────────────────────
@@ -92,24 +104,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+          targets: aarch64-apple-darwin
 
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri -> target
 
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --locked --version "^2.0"
+
       - name: Build Tauri (ARM64)
         run: cargo tauri build --target aarch64-apple-darwin --verbose 2>&1
 
-      - name: Upload Artifact
+      - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
           name: docx-reader-macos-arm64
-          path: src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.dmg
+          path: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: warn
           retention-days: 30
 
   # ── 创建 Release ───────────────────────────────────────
@@ -126,9 +148,10 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: artifacts/**/*.msi
-                                 artifacts/**/*.dmg
-                                 artifacts/**/docx_reader.exe
+          files: |
+            artifacts/**/*.msi
+            artifacts/**/*.dmg
+            artifacts/**/docx_reader.exe
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
