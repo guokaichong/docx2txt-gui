@@ -1,0 +1,12 @@
+{
+  "name": "docx-reader",
+  "version": "1.0.0",
+  "description": "DocX 优雅阅读器 - 本地 docx 解析与格式化导出",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0"
+  }
+}
